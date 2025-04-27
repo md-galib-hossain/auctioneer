@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { PageHeader } from "@/components/ui/page-header"
-import { SignUpForm } from "@/components/auth/sign-upform"
+import { SignUpForm } from "@/components/auth/sign-up-form"
 
 export const metadata: Metadata = {
   title: "Sign Up | Auctioneer",

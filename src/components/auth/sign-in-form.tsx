@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { OAuthButtons } from "./oaut-buttons"
+import { OAuthButtons } from "./oauth-buttons"
+import { authClient } from "@/lib/auth-client"
 
 const signInSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -39,7 +40,20 @@ export function SignInForm() {
       console.log("Sign in data:", data)
 
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      // await new Promise((resolve) => setTimeout(resolve, 1000))
+const {data:response,error}= await authClient.signIn.email({
+        email: data.email,
+        password: data.password,
+        callbackURL:"/",
+        // here i can use rememberMe:
+      })
+      if (error) {
+        console.error("Sign in error:", error)
+        return
+      }
+      console.log("Sign in response:", data)
+
+  
 
       // Redirect to home page after successful sign in
       router.push("/")

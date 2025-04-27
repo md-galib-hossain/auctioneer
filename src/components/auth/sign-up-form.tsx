@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { OAuthButtons } from "./oaut-buttons"
+import { authClient } from "@/lib/auth-client"
+import { OAuthButtons } from "./oauth-buttons"
 
 const signUpSchema = z
   .object({
@@ -52,7 +53,25 @@ export function SignUpForm() {
     try {
       console.log("Sign up data:", data)
 
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      // await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    const {data:response,error} =  await authClient.signUp.email({
+      email: data.email,
+      password: data.password,
+      name:data.name,
+      callbackURL:"/"
+    },{
+      onRequest:()=> {
+        setIsLoading(true)
+      },
+      onSuccess:()=> {
+        setIsLoading(false)
+        router.push("/")
+      },
+      onError: (ctx)=> {
+        console.log(ctx.error.message)
+      }
+    })
 
       router.push("/")
     } catch (error) {
@@ -77,6 +96,7 @@ export function SignUpForm() {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {/* name */}
           <FormField
             control={form.control}
             name="name"
@@ -90,6 +110,7 @@ export function SignUpForm() {
               </FormItem>
             )}
           />
+          {/* email */}
           <FormField
             control={form.control}
             name="email"
@@ -103,6 +124,7 @@ export function SignUpForm() {
               </FormItem>
             )}
           />
+          {/* password */}
           <FormField
             control={form.control}
             name="password"
@@ -128,6 +150,7 @@ export function SignUpForm() {
               </FormItem>
             )}
           />
+          {/* confirm password */}
           <FormField
             control={form.control}
             name="confirmPassword"
@@ -153,6 +176,7 @@ export function SignUpForm() {
               </FormItem>
             )}
           />
+          {/* terms */}
           <FormField
             control={form.control}
             name="terms"

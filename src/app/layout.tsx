@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SocketProvider } from "@/hooks/use-socket";
 import { ThemeProvider } from "next-themes";
-import { Header } from "@/components/layout/header";
+import { Header } from "@/components/layout/Header/header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,12 +32,12 @@ export default function RootLayout({
       >
         {" "}
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <SocketProvider>
+          {/* <SocketProvider> */}
             <div className="relative flex min-h-screen flex-col">
               <Header />
               <div className="flex-1">{children}</div>
             </div>
-          </SocketProvider>
+          {/* </SocketProvider> */}
         </ThemeProvider>
       </body>
     </html>
