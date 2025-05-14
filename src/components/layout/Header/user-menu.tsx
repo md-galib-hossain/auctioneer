@@ -41,6 +41,7 @@ export function UserMenu({ session, theme, setTheme }: UserMenuProps) {
         {session ? (
           <>
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel>{session.user.name}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               {profileNavItems.map((item) => (

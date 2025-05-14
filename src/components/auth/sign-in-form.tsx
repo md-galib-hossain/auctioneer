@@ -39,8 +39,7 @@ export function SignInForm() {
       // In a real app, you would call your authentication API here
       console.log("Sign in data:", data)
 
-      // Simulate API call
-      // await new Promise((resolve) => setTimeout(resolve, 1000))
+    
 const {data:response,error}= await authClient.signIn.email({
         email: data.email,
         password: data.password,
@@ -51,14 +50,14 @@ const {data:response,error}= await authClient.signIn.email({
         console.error("Sign in error:", error)
         return
       }
-      console.log("Sign in response:", data)
+      console.log("Sign in response:", response)
 
   
 
       // Redirect to home page after successful sign in
       router.push("/")
-    } catch (error) {
-      console.error("Sign in error:", error)
+    } catch (err) {
+      console.error("Sign in error from catch:", err)
     } finally {
       setIsLoading(false)
     }

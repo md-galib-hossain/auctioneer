@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
+import { authClient } from "@/lib/auth-client"
 
 export function OAuthButtons() {
   const router = useRouter()
@@ -17,8 +18,9 @@ export function OAuthButtons() {
       // In a real app, you would call your OAuth provider here
       console.log("Google sign in")
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await authClient.signIn.social({
+        provider: "google"
+    })
 
       // Redirect to home page after successful sign in
       router.push("/")
