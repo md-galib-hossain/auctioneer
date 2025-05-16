@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
@@ -36,12 +37,13 @@ export function AuctionChatSection({
 }: AuctionChatSectionProps) {
   const { data: session } = authClient.useSession();
   const userId = useMemo(() => session?.user.id ?? "unknown", [session]);
-  console.log("Rendering AuctionChatSection, userId:", userId);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); 
   const [hasMore, setHasMore] = useState(!!initialMeta.nextCursor);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [nextCursor, setNextCursor] = useState<string | null>(initialMeta.nextCursor);
+  const [nextCursor, setNextCursor] = useState<string | null>(
+    initialMeta.nextCursor
+  );
   const [messages, setMessages] = useState<IChatMessage[]>([]);
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
@@ -57,23 +59,34 @@ export function AuctionChatSection({
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const heightRef = useRef(0);
-  const [measureRef, { height: newHeight }] = useMeasure();
 
-  // Initialize messages with oldChats
+  const heightRef = useRef(0);
+  const [measureRef, { height: newHeight }] = useMeasure(); 
+
+  const isPrependingMessagesRef = useRef(false);
+  const scrollTopBeforePrependRef = useRef(0);
+  const wasNearBottomRef = useRef(true);
+
+
   useEffect(() => {
     if (oldChats && oldChats.length > 0) {
-      console.log("Initializing with oldChats:", oldChats);
-      setMessages(
-        oldChats.sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        )
+      const sortedOldChats = oldChats.sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
+      setMessages(sortedOldChats);
+      setTimeout(() => {
+        if (scrollRef.current) {
+          heightRef.current = scrollRef.current.scrollHeight;
+        }
+        scrollToBottom();
+        wasNearBottomRef.current = true;
+      }, 50);
+    } else if (scrollRef.current) { 
+        heightRef.current = scrollRef.current.scrollHeight;
     }
-  }, [oldChats]);
+  }, [oldChats]); 
 
-  // Scroll to bottom when new messages are added or on initial load
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
       if (messagesEndRef.current) {
@@ -82,33 +95,48 @@ export function AuctionChatSection({
     }, 1);
   }, []);
 
-  // Adjust scroll position when new messages are prepended (infinite scroll)
-  const scrollToLast = useCallback(() => {
-    if (newHeight > heightRef.current && scrollRef.current) {
-      scrollRef.current.scrollTop = newHeight - heightRef.current;
-      heightRef.current = newHeight;
-    }
-  }, [newHeight]);
 
-  // Handle scroll and height updates
   useEffect(() => {
-    if (!scrollRef.current || !messagesEndRef.current) return;
-
-    console.log("Effect triggered for scroll handling");
-
-    if (messages.length <= 15) {
-      // Initial load or small number of messages
-      heightRef.current = newHeight;
-      scrollToBottom();
-    } else {
-      // Adjust scroll position after loading more messages
-      scrollToLast();
+    if (!scrollRef.current || !messagesEndRef.current || newHeight === 0) {
+        if (newHeight === 0 && messages.length > 0 && heightRef.current !== 0) {
+             console.warn("AuctionChat: newHeight is 0 from useMeasure, but messages exist. Previous heightRef was:", heightRef.current);
+        }
+       
+        if (newHeight === 0 && !isPrependingMessagesRef.current) return; 
     }
-  }, [messages, newHeight, scrollToBottom, scrollToLast]);
 
-  // Fetch more messages when scrolling to top
+
+    if (isPrependingMessagesRef.current) {
+   
+      if (scrollRef.current) {
+        const currentScrollableHeight = scrollRef.current.scrollHeight;
+        const prevScrollableHeight = heightRef.current;
+
+        if (currentScrollableHeight > prevScrollableHeight) {
+          const addedHeight = currentScrollableHeight - prevScrollableHeight;
+          const newScrollTop = scrollTopBeforePrependRef.current + addedHeight;
+          scrollRef.current.scrollTop = newScrollTop;
+        }
+        heightRef.current = currentScrollableHeight;
+      }
+      isPrependingMessagesRef.current = false;
+    } else {
+ 
+      if (wasNearBottomRef.current || messages.length <= (oldChats?.length || 0) + 1) {
+        scrollToBottom();
+      }
+
+      heightRef.current = scrollRef.current ? scrollRef.current.scrollHeight : newHeight;
+    }
+  }, [messages, newHeight, scrollToBottom, oldChats?.length]); 
+
+
   const onScrollToTop = async () => {
-    if (!nextCursor || loading || !hasMore) return;
+    if (!nextCursor || loading || !hasMore || !scrollRef.current) return;
+
+    isPrependingMessagesRef.current = true;
+    scrollTopBeforePrependRef.current = scrollRef.current.scrollTop;
+   
 
     setLoading(true);
     setFetchError(null);
@@ -118,9 +146,9 @@ export function AuctionChatSection({
         `/chat?auctionRoomId=${auctionRoomId}&limit=15&cursor=${nextCursor}`
       );
       const { meta, data } = response.data;
-      console.log("Fetched more messages:", { meta, data });
 
       if (data.length > 0) {
+        
         setMessages((prev) => [
           ...data.sort(
             (a: IChatMessage, b: IChatMessage) =>
@@ -133,29 +161,30 @@ export function AuctionChatSection({
       } else {
         setHasMore(false);
         setNextCursor(null);
+        isPrependingMessagesRef.current = false; 
       }
     } catch (error) {
       console.error("Error fetching more messages:", error);
       setFetchError("Failed to load more messages");
+      isPrependingMessagesRef.current = false; 
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle scroll event to detect scroll-to-top
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (scrollRef.current && scrollRef.current.scrollTop === 0) {
-      console.log("SCROLLED TO TOP");
-      console.log("scrollTop", e.currentTarget.scrollTop);
-      console.log("newHeight", newHeight);
-      console.log("oldHeight", heightRef.current);
-      console.log("messages", messages);
+    const target = e.currentTarget;
+    if (target.scrollTop === 0 && hasMore && !loading) {
       onScrollToTop();
     }
+
+    const { scrollHeight, scrollTop, clientHeight } = target;
+    wasNearBottomRef.current = scrollHeight - scrollTop <= clientHeight + 30;
   };
 
-  // Memoize messages to stabilize reference
   const memoizedMessages = useMemo(() => messages, [messages]);
+
+
 
   return (
     <Card className="h-full flex flex-col">
@@ -185,15 +214,14 @@ export function AuctionChatSection({
             onRetry={() => socket?.connect()}
             socket={socket}
           />
-              {loading && (
-            <div  className="text-center text-sm text-muted-foreground flex items-center justify-center gap-2" aria-live="polite">
+            {loading && (
+            <div className="text-center text-sm text-muted-foreground flex items-center justify-center gap-2" aria-live="polite">
               <Loader2 className="h-4 w-4 animate-spin" />
               Loading more messages...
             </div>
           )}
           {!loading && hasMore && (
-            <div  className="text-center text-sm text-muted-foreground" aria-live="polite">
-              Scroll up to load more
+            <div className="text-center text-sm text-muted-foreground" aria-live="polite">
             </div>
           )}
           {!loading && !hasMore && messages.length > 0 && (
@@ -214,7 +242,6 @@ export function AuctionChatSection({
           ))}
           <div ref={messagesEndRef} />
         </div>
-      
       </CardContent>
 
       <CardFooter className="p-3 border-t mt-auto">
