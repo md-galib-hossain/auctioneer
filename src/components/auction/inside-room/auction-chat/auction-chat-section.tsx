@@ -233,10 +233,12 @@ export function AuctionChatSection({
             <div className="text-red-500 text-center">{fetchError}</div>
           )}
           {memoizedMessages.map((msg, index) => (
+            
             <div
               key={msg.id || index}
               className="transition-opacity duration-200"
             >
+              
               <ChatMessage message={msg} />
             </div>
           ))}

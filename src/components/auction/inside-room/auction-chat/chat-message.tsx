@@ -15,7 +15,7 @@ interface ChatMessageProps {
 export const ChatMessage = React.memo(({ message }: ChatMessageProps) => {
   const { data: session } = authClient.useSession();
   const ownMessage = message.userId === session?.user?.id;
-  console.log("Rendering ChatMessage:", { messageId: message.id, ownMessage, userId: message.userId, sessionUserId: session?.user?.id }); // Debug log
+  // console.log("Rendering ChatMessage:", { messageId: message.id, ownMessage, userId: message.userId, sessionUserId: session?.user?.id }); // Debug log
 
   const formatTime = (date: string) =>
     new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
