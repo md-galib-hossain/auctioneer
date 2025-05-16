@@ -6,8 +6,7 @@ import { IChatMessage } from "./types";
 interface UseChatSocketProps {
   socket: Socket | null;
   isConnected: boolean;
-  userId
-:string;
+  userId: string;
   auctionRoomId: string;
   setMessages: React.Dispatch<React.SetStateAction<IChatMessage[]>>;
   setConnectionError: React.Dispatch<React.SetStateAction<string | null>>;
@@ -22,29 +21,33 @@ export const useChatSocket = ({
   setConnectionError,
 }: UseChatSocketProps) => {
   const sendMessage = useCallback(
-    (message: string, callback?: (response: { success: boolean; message: string }) => void) => {
+    (
+      message: string,
+      callback?: (response: { success: boolean; message: string }) => void
+    ) => {
       if (!socket || !isConnected || !message.trim()) {
-        setConnectionError(!message.trim() ? "Message cannot be empty" : "Not connected to chat server");
+        setConnectionError(
+          !message.trim()
+            ? "Message cannot be empty"
+            : "Not connected to chat server"
+        );
         return;
       }
+     
 
       const tempId = `temp-${Date.now()}`;
-    //   const optimisticMessage: IChatMessage = {
-    //     id: tempId,
-    //     content: message,
-    //     user: { id: "temp-user", name: "You", role: "user", email: "", emailVerified: false, image: null },
-    //     userId: "temp-user",
-    //     createdAt: new Date().toISOString(),
-    //     isSystem: false,
-    //   };
-      setMessages((prev) =>
-        [...prev].sort((a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        )
-      );
+      //   const optimisticMessage: IChatMessage = {
+      //     id: tempId,
+      //     content: message,
+      //     user: { id: "temp-user", name: "You", role: "user", email: "", emailVerified: false, image: null },
+      //     userId: "temp-user",
+      //     createdAt: new Date().toISOString(),
+      //     isSystem: false,
+      //   };
+    
 
       const chatSocket = AuctionChatSocketClient(socket);
-      chatSocket.sendMessage(userId,auctionRoomId, message, (response) => {
+      chatSocket.sendMessage(userId, auctionRoomId, message, (response) => {
         if (response.success) {
           console.log("Message sent successfully");
           setConnectionError(null);
@@ -56,7 +59,14 @@ export const useChatSocket = ({
         callback?.(response);
       });
     },
-    [socket, isConnected,userId, auctionRoomId, setMessages, setConnectionError]
+    [
+      socket,
+      isConnected,
+      userId,
+      auctionRoomId,
+      setMessages,
+      setConnectionError,
+    ]
   );
 
   useEffect(() => {
@@ -72,12 +82,21 @@ export const useChatSocket = ({
 
     const handleNewMessage = (newMessage: Partial<IChatMessage>) => {
       console.log("Received new message:", newMessage);
-      const formattedMessage: IChatMessage = {
+    
+
+
+   
+
+      const formattedMessage: IChatMessage & { ownMessage: boolean } = {
+
         id: newMessage.id ?? `temp-${Date.now()}`,
         content: newMessage.content ?? "",
         user: {
           id: newMessage.user?.id ?? "unknown",
-          name: newMessage.user?.name ?? "Unknown",
+          name:
+            newMessage.user?.id === userId
+              ? "You"
+              : newMessage.user?.name ?? "Unknown",
           role: newMessage.user?.role ?? "user",
           email: newMessage.user?.email ?? "",
           emailVerified: newMessage.user?.emailVerified ?? false,
@@ -86,10 +105,12 @@ export const useChatSocket = ({
         userId: newMessage.userId ?? "unknown",
         createdAt: newMessage.createdAt ?? new Date().toISOString(),
         isSystem: newMessage.isSystem ?? false,
+        ownMessage: newMessage.user?.id === userId
       };
       setMessages((prev) =>
-        [...prev, formattedMessage].sort((a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        [...prev, formattedMessage].sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         )
       );
     };

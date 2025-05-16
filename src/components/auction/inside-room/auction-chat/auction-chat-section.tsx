@@ -185,7 +185,6 @@ export function AuctionChatSection({
   const memoizedMessages = useMemo(() => messages, [messages]);
 
 
-
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
@@ -232,11 +231,14 @@ export function AuctionChatSection({
           {fetchError && (
             <div className="text-red-500 text-center">{fetchError}</div>
           )}
+
           {memoizedMessages.map((msg, index) => (
+            
             <div
               key={msg.id || index}
-              className="transition-opacity duration-200"
+              className="transition-opacity duration-200 "
             >
+              
               <ChatMessage message={msg} />
             </div>
           ))}

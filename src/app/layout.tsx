@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { Header } from "@/components/layout/Header/header";
 import { cookies } from "next/headers";
 import { SocketProvider } from "@/lib/socket";
+import { Providers } from "@/lib/providers/provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,7 +40,8 @@ export default async function RootLayout({
           <SocketProvider token={token}>
             <div className="relative flex min-h-screen flex-col">
               <Header />
-              <div className="flex-1">{children}</div>
+              <div className="flex-1">
+                <Providers>{children}</Providers></div>
             </div>
           </SocketProvider>
         </ThemeProvider>
