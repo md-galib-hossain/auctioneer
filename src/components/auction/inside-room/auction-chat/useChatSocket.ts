@@ -81,7 +81,14 @@ export const useChatSocket = ({
     const chatSocket = AuctionChatSocketClient(socket);
 
     const handleNewMessage = (newMessage: Partial<IChatMessage>) => {
-      const formattedMessage: IChatMessage = {
+      console.log("Received new message:", newMessage);
+    
+
+
+   
+
+      const formattedMessage: IChatMessage & { ownMessage: boolean } = {
+
         id: newMessage.id ?? `temp-${Date.now()}`,
         content: newMessage.content ?? "",
         user: {
@@ -98,6 +105,7 @@ export const useChatSocket = ({
         userId: newMessage.userId ?? "unknown",
         createdAt: newMessage.createdAt ?? new Date().toISOString(),
         isSystem: newMessage.isSystem ?? false,
+        ownMessage: newMessage.user?.id === userId
       };
       setMessages((prev) =>
         [...prev, formattedMessage].sort(
